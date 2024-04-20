@@ -7,6 +7,7 @@ import (
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-playground/validator/v10"
+	"github.com/yudai2929/kendai-navi/backend/db/ent"
 )
 
 type ErrorCode int
