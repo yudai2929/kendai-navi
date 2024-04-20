@@ -10,7 +10,7 @@ apply-migrate:
 	@scripts/migrate.sh
 
 ent-create-model:
-	go run -mod=mod entgo.io/ent/cmd/ent new $(model) --target ./db/ent
+	go run -mod=mod entgo.io/ent/cmd/ent new $(model) --target ./db/ent/schema
 
 ent-gen:
 	go generate ./db/ent
@@ -26,3 +26,9 @@ new-network:
 
 delete-network:
 	docker network rm kendai-navi-network
+
+up-db:
+	docker-compose up -d db
+
+rm-db:
+	docker-compose rm db
