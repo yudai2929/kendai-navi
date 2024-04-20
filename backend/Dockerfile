@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY . .
 RUN go mod download && go mod verify
-RUN go build -v -o /main ./cmd/main.go
+RUN go build -v -o /main ./cmd/app/main.go
 
 CMD ["/main"]
