@@ -75,10 +75,19 @@ func (u *AuthUsecaseImpl) RegisterUser(ctx context.Context, input *RegisterUserI
 		u.time(),
 		u.time(),
 	)
-
-	if _, err := u.userRepository.CreateUser(ctx, newUser); err != nil {
-		return errors.Wrap(err)
+	_, createErr := u.userRepository.CreateUser(ctx, newUser)
+	if createErr != nil {
+		return errors.Wrap(createErr)
 	}
+
+	// dbに保存が失敗した場合、authのユーザーも削除する
+	defer func() {
+		if createErr != nil {
+			if err := u.authClient.DeleteUser(ctx, newAuthUser.UID); err != nil {
+				// log error
+			}
+		}
+	}()
 
 	return nil
 }

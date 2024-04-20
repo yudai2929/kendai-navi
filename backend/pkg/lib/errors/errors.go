@@ -111,6 +111,10 @@ func (cs *customError) convert(err error, origin error, stack string) error {
 		cs.code = AlreadyExists
 		return cs
 	}
+	if auth.IsUserNotFound(err) {
+		cs.code = NotFound
+		return cs
+	}
 
 	// Ent
 	if ent.IsNotFound(err) {
@@ -133,6 +137,8 @@ func (cs *customError) convert(err error, origin error, stack string) error {
 		cs.code = InvalidArgument
 		return cs
 	}
+
+	// TODO: tx error
 
 	cs.code = Internal
 	return cs

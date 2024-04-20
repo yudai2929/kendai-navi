@@ -45,3 +45,10 @@ func (c *FirebaseClient) CreateUser(ctx context.Context, email, password string)
 	}
 	return NewAuthUser(u), nil
 }
+
+func (c *FirebaseClient) DeleteUser(ctx context.Context, uid string) error {
+	if err := c.Client.DeleteUser(ctx, uid); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
