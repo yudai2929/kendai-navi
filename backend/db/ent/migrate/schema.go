@@ -8,6 +8,83 @@ import (
 )
 
 var (
+	// ClassReviewsColumns holds the columns for the "class_reviews" table.
+	ClassReviewsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "class_id", Type: field.TypeInt},
+		{Name: "teacher_id", Type: field.TypeInt},
+		{Name: "comment", Type: field.TypeString},
+		{Name: "class_year", Type: field.TypeInt},
+		{Name: "term", Type: field.TypeInt},
+		{Name: "satisfaction_level", Type: field.TypeInt},
+		{Name: "easy_level", Type: field.TypeInt},
+		{Name: "attendance_method", Type: field.TypeInt},
+		{Name: "evaluation_method", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeString},
+	}
+	// ClassReviewsTable holds the schema information for the "class_reviews" table.
+	ClassReviewsTable = &schema.Table{
+		Name:       "class_reviews",
+		Columns:    ClassReviewsColumns,
+		PrimaryKey: []*schema.Column{ClassReviewsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "class_reviews_users_class_reviews",
+				Columns:    []*schema.Column{ClassReviewsColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "classreview_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{ClassReviewsColumns[12]},
+			},
+			{
+				Name:    "classreview_class_id",
+				Unique:  false,
+				Columns: []*schema.Column{ClassReviewsColumns[1]},
+			},
+		},
+	}
+	// ClassReviewLikesColumns holds the columns for the "class_review_likes" table.
+	ClassReviewLikesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "class_review_id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+	}
+	// ClassReviewLikesTable holds the schema information for the "class_review_likes" table.
+	ClassReviewLikesTable = &schema.Table{
+		Name:       "class_review_likes",
+		Columns:    ClassReviewLikesColumns,
+		PrimaryKey: []*schema.Column{ClassReviewLikesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "class_review_likes_class_reviews_class_review_likes",
+				Columns:    []*schema.Column{ClassReviewLikesColumns[3]},
+				RefColumns: []*schema.Column{ClassReviewsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "class_review_likes_users_class_review_likes",
+				Columns:    []*schema.Column{ClassReviewLikesColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "classreviewlike_user_id_class_review_id",
+				Unique:  true,
+				Columns: []*schema.Column{ClassReviewLikesColumns[4], ClassReviewLikesColumns[3]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -33,9 +110,14 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ClassReviewsTable,
+		ClassReviewLikesTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	ClassReviewsTable.ForeignKeys[0].RefTable = UsersTable
+	ClassReviewLikesTable.ForeignKeys[0].RefTable = ClassReviewsTable
+	ClassReviewLikesTable.ForeignKeys[1].RefTable = UsersTable
 }

@@ -10,6 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreview"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreviewlike"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/user"
 )
 
@@ -60,6 +62,36 @@ func (uc *UserCreate) SetUpdatedAt(t time.Time) *UserCreate {
 func (uc *UserCreate) SetID(s string) *UserCreate {
 	uc.mutation.SetID(s)
 	return uc
+}
+
+// AddClassReviewIDs adds the "class_reviews" edge to the ClassReview entity by IDs.
+func (uc *UserCreate) AddClassReviewIDs(ids ...string) *UserCreate {
+	uc.mutation.AddClassReviewIDs(ids...)
+	return uc
+}
+
+// AddClassReviews adds the "class_reviews" edges to the ClassReview entity.
+func (uc *UserCreate) AddClassReviews(c ...*ClassReview) *UserCreate {
+	ids := make([]string, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddClassReviewIDs(ids...)
+}
+
+// AddClassReviewLikeIDs adds the "class_review_likes" edge to the ClassReviewLike entity by IDs.
+func (uc *UserCreate) AddClassReviewLikeIDs(ids ...int) *UserCreate {
+	uc.mutation.AddClassReviewLikeIDs(ids...)
+	return uc
+}
+
+// AddClassReviewLikes adds the "class_review_likes" edges to the ClassReviewLike entity.
+func (uc *UserCreate) AddClassReviewLikes(c ...*ClassReviewLike) *UserCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddClassReviewLikeIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -172,6 +204,38 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := uc.mutation.ClassReviewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ClassReviewLikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

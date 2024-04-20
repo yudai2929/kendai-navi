@@ -14,6 +14,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreview"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreviewlike"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/user"
 )
 
@@ -22,6 +25,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// ClassReview is the client for interacting with the ClassReview builders.
+	ClassReview *ClassReviewClient
+	// ClassReviewLike is the client for interacting with the ClassReviewLike builders.
+	ClassReviewLike *ClassReviewLikeClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -35,6 +42,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.ClassReview = NewClassReviewClient(c.config)
+	c.ClassReviewLike = NewClassReviewLikeClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -126,9 +135,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:             ctx,
+		config:          cfg,
+		ClassReview:     NewClassReviewClient(cfg),
+		ClassReviewLike: NewClassReviewLikeClient(cfg),
+		User:            NewUserClient(cfg),
 	}, nil
 }
 
@@ -146,16 +157,18 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:             ctx,
+		config:          cfg,
+		ClassReview:     NewClassReviewClient(cfg),
+		ClassReviewLike: NewClassReviewLikeClient(cfg),
+		User:            NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		ClassReview.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -177,22 +190,360 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.ClassReview.Use(hooks...)
+	c.ClassReviewLike.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.ClassReview.Intercept(interceptors...)
+	c.ClassReviewLike.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *ClassReviewMutation:
+		return c.ClassReview.mutate(ctx, m)
+	case *ClassReviewLikeMutation:
+		return c.ClassReviewLike.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// ClassReviewClient is a client for the ClassReview schema.
+type ClassReviewClient struct {
+	config
+}
+
+// NewClassReviewClient returns a client for the ClassReview from the given config.
+func NewClassReviewClient(c config) *ClassReviewClient {
+	return &ClassReviewClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `classreview.Hooks(f(g(h())))`.
+func (c *ClassReviewClient) Use(hooks ...Hook) {
+	c.hooks.ClassReview = append(c.hooks.ClassReview, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `classreview.Intercept(f(g(h())))`.
+func (c *ClassReviewClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ClassReview = append(c.inters.ClassReview, interceptors...)
+}
+
+// Create returns a builder for creating a ClassReview entity.
+func (c *ClassReviewClient) Create() *ClassReviewCreate {
+	mutation := newClassReviewMutation(c.config, OpCreate)
+	return &ClassReviewCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ClassReview entities.
+func (c *ClassReviewClient) CreateBulk(builders ...*ClassReviewCreate) *ClassReviewCreateBulk {
+	return &ClassReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ClassReviewClient) MapCreateBulk(slice any, setFunc func(*ClassReviewCreate, int)) *ClassReviewCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ClassReviewCreateBulk{err: fmt.Errorf("calling to ClassReviewClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ClassReviewCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ClassReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ClassReview.
+func (c *ClassReviewClient) Update() *ClassReviewUpdate {
+	mutation := newClassReviewMutation(c.config, OpUpdate)
+	return &ClassReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ClassReviewClient) UpdateOne(cr *ClassReview) *ClassReviewUpdateOne {
+	mutation := newClassReviewMutation(c.config, OpUpdateOne, withClassReview(cr))
+	return &ClassReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ClassReviewClient) UpdateOneID(id string) *ClassReviewUpdateOne {
+	mutation := newClassReviewMutation(c.config, OpUpdateOne, withClassReviewID(id))
+	return &ClassReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ClassReview.
+func (c *ClassReviewClient) Delete() *ClassReviewDelete {
+	mutation := newClassReviewMutation(c.config, OpDelete)
+	return &ClassReviewDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ClassReviewClient) DeleteOne(cr *ClassReview) *ClassReviewDeleteOne {
+	return c.DeleteOneID(cr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ClassReviewClient) DeleteOneID(id string) *ClassReviewDeleteOne {
+	builder := c.Delete().Where(classreview.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ClassReviewDeleteOne{builder}
+}
+
+// Query returns a query builder for ClassReview.
+func (c *ClassReviewClient) Query() *ClassReviewQuery {
+	return &ClassReviewQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeClassReview},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ClassReview entity by its id.
+func (c *ClassReviewClient) Get(ctx context.Context, id string) (*ClassReview, error) {
+	return c.Query().Where(classreview.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ClassReviewClient) GetX(ctx context.Context, id string) *ClassReview {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsers queries the users edge of a ClassReview.
+func (c *ClassReviewClient) QueryUsers(cr *ClassReview) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(classreview.Table, classreview.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, classreview.UsersTable, classreview.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryClassReviewLikes queries the class_review_likes edge of a ClassReview.
+func (c *ClassReviewClient) QueryClassReviewLikes(cr *ClassReview) *ClassReviewLikeQuery {
+	query := (&ClassReviewLikeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(classreview.Table, classreview.FieldID, id),
+			sqlgraph.To(classreviewlike.Table, classreviewlike.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, classreview.ClassReviewLikesTable, classreview.ClassReviewLikesColumn),
+		)
+		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ClassReviewClient) Hooks() []Hook {
+	return c.hooks.ClassReview
+}
+
+// Interceptors returns the client interceptors.
+func (c *ClassReviewClient) Interceptors() []Interceptor {
+	return c.inters.ClassReview
+}
+
+func (c *ClassReviewClient) mutate(ctx context.Context, m *ClassReviewMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ClassReviewCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ClassReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ClassReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ClassReviewDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ClassReview mutation op: %q", m.Op())
+	}
+}
+
+// ClassReviewLikeClient is a client for the ClassReviewLike schema.
+type ClassReviewLikeClient struct {
+	config
+}
+
+// NewClassReviewLikeClient returns a client for the ClassReviewLike from the given config.
+func NewClassReviewLikeClient(c config) *ClassReviewLikeClient {
+	return &ClassReviewLikeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `classreviewlike.Hooks(f(g(h())))`.
+func (c *ClassReviewLikeClient) Use(hooks ...Hook) {
+	c.hooks.ClassReviewLike = append(c.hooks.ClassReviewLike, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `classreviewlike.Intercept(f(g(h())))`.
+func (c *ClassReviewLikeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ClassReviewLike = append(c.inters.ClassReviewLike, interceptors...)
+}
+
+// Create returns a builder for creating a ClassReviewLike entity.
+func (c *ClassReviewLikeClient) Create() *ClassReviewLikeCreate {
+	mutation := newClassReviewLikeMutation(c.config, OpCreate)
+	return &ClassReviewLikeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ClassReviewLike entities.
+func (c *ClassReviewLikeClient) CreateBulk(builders ...*ClassReviewLikeCreate) *ClassReviewLikeCreateBulk {
+	return &ClassReviewLikeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ClassReviewLikeClient) MapCreateBulk(slice any, setFunc func(*ClassReviewLikeCreate, int)) *ClassReviewLikeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ClassReviewLikeCreateBulk{err: fmt.Errorf("calling to ClassReviewLikeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ClassReviewLikeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ClassReviewLikeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ClassReviewLike.
+func (c *ClassReviewLikeClient) Update() *ClassReviewLikeUpdate {
+	mutation := newClassReviewLikeMutation(c.config, OpUpdate)
+	return &ClassReviewLikeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ClassReviewLikeClient) UpdateOne(crl *ClassReviewLike) *ClassReviewLikeUpdateOne {
+	mutation := newClassReviewLikeMutation(c.config, OpUpdateOne, withClassReviewLike(crl))
+	return &ClassReviewLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ClassReviewLikeClient) UpdateOneID(id int) *ClassReviewLikeUpdateOne {
+	mutation := newClassReviewLikeMutation(c.config, OpUpdateOne, withClassReviewLikeID(id))
+	return &ClassReviewLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ClassReviewLike.
+func (c *ClassReviewLikeClient) Delete() *ClassReviewLikeDelete {
+	mutation := newClassReviewLikeMutation(c.config, OpDelete)
+	return &ClassReviewLikeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ClassReviewLikeClient) DeleteOne(crl *ClassReviewLike) *ClassReviewLikeDeleteOne {
+	return c.DeleteOneID(crl.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ClassReviewLikeClient) DeleteOneID(id int) *ClassReviewLikeDeleteOne {
+	builder := c.Delete().Where(classreviewlike.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ClassReviewLikeDeleteOne{builder}
+}
+
+// Query returns a query builder for ClassReviewLike.
+func (c *ClassReviewLikeClient) Query() *ClassReviewLikeQuery {
+	return &ClassReviewLikeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeClassReviewLike},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ClassReviewLike entity by its id.
+func (c *ClassReviewLikeClient) Get(ctx context.Context, id int) (*ClassReviewLike, error) {
+	return c.Query().Where(classreviewlike.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ClassReviewLikeClient) GetX(ctx context.Context, id int) *ClassReviewLike {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsers queries the users edge of a ClassReviewLike.
+func (c *ClassReviewLikeClient) QueryUsers(crl *ClassReviewLike) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := crl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(classreviewlike.Table, classreviewlike.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, classreviewlike.UsersTable, classreviewlike.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(crl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryClassReviews queries the class_reviews edge of a ClassReviewLike.
+func (c *ClassReviewLikeClient) QueryClassReviews(crl *ClassReviewLike) *ClassReviewQuery {
+	query := (&ClassReviewClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := crl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(classreviewlike.Table, classreviewlike.FieldID, id),
+			sqlgraph.To(classreview.Table, classreview.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, classreviewlike.ClassReviewsTable, classreviewlike.ClassReviewsColumn),
+		)
+		fromV = sqlgraph.Neighbors(crl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ClassReviewLikeClient) Hooks() []Hook {
+	return c.hooks.ClassReviewLike
+}
+
+// Interceptors returns the client interceptors.
+func (c *ClassReviewLikeClient) Interceptors() []Interceptor {
+	return c.inters.ClassReviewLike
+}
+
+func (c *ClassReviewLikeClient) mutate(ctx context.Context, m *ClassReviewLikeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ClassReviewLikeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ClassReviewLikeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ClassReviewLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ClassReviewLikeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ClassReviewLike mutation op: %q", m.Op())
 	}
 }
 
@@ -304,6 +655,38 @@ func (c *UserClient) GetX(ctx context.Context, id string) *User {
 	return obj
 }
 
+// QueryClassReviews queries the class_reviews edge of a User.
+func (c *UserClient) QueryClassReviews(u *User) *ClassReviewQuery {
+	query := (&ClassReviewClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(classreview.Table, classreview.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ClassReviewsTable, user.ClassReviewsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryClassReviewLikes queries the class_review_likes edge of a User.
+func (c *UserClient) QueryClassReviewLikes(u *User) *ClassReviewLikeQuery {
+	query := (&ClassReviewLikeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(classreviewlike.Table, classreviewlike.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ClassReviewLikesTable, user.ClassReviewLikesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -332,9 +715,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		User []ent.Hook
+		ClassReview, ClassReviewLike, User []ent.Hook
 	}
 	inters struct {
-		User []ent.Interceptor
+		ClassReview, ClassReviewLike, User []ent.Interceptor
 	}
 )

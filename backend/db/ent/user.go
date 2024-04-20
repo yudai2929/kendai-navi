@@ -28,8 +28,40 @@ type User struct {
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// ClassReviews holds the value of the class_reviews edge.
+	ClassReviews []*ClassReview `json:"class_reviews,omitempty"`
+	// ClassReviewLikes holds the value of the class_review_likes edge.
+	ClassReviewLikes []*ClassReviewLike `json:"class_review_likes,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// ClassReviewsOrErr returns the ClassReviews value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ClassReviewsOrErr() ([]*ClassReview, error) {
+	if e.loadedTypes[0] {
+		return e.ClassReviews, nil
+	}
+	return nil, &NotLoadedError{edge: "class_reviews"}
+}
+
+// ClassReviewLikesOrErr returns the ClassReviewLikes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ClassReviewLikesOrErr() ([]*ClassReviewLike, error) {
+	if e.loadedTypes[1] {
+		return e.ClassReviewLikes, nil
+	}
+	return nil, &NotLoadedError{edge: "class_review_likes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -109,6 +141,16 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryClassReviews queries the "class_reviews" edge of the User entity.
+func (u *User) QueryClassReviews() *ClassReviewQuery {
+	return NewUserClient(u.config).QueryClassReviews(u)
+}
+
+// QueryClassReviewLikes queries the "class_review_likes" edge of the User entity.
+func (u *User) QueryClassReviewLikes() *ClassReviewLikeQuery {
+	return NewUserClient(u.config).QueryClassReviewLikes(u)
 }
 
 // Update returns a builder for updating this User.

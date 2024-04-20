@@ -4,6 +4,7 @@ package user
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -23,8 +24,26 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeClassReviews holds the string denoting the class_reviews edge name in mutations.
+	EdgeClassReviews = "class_reviews"
+	// EdgeClassReviewLikes holds the string denoting the class_review_likes edge name in mutations.
+	EdgeClassReviewLikes = "class_review_likes"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// ClassReviewsTable is the table that holds the class_reviews relation/edge.
+	ClassReviewsTable = "class_reviews"
+	// ClassReviewsInverseTable is the table name for the ClassReview entity.
+	// It exists in this package in order to avoid circular dependency with the "classreview" package.
+	ClassReviewsInverseTable = "class_reviews"
+	// ClassReviewsColumn is the table column denoting the class_reviews relation/edge.
+	ClassReviewsColumn = "user_id"
+	// ClassReviewLikesTable is the table that holds the class_review_likes relation/edge.
+	ClassReviewLikesTable = "class_review_likes"
+	// ClassReviewLikesInverseTable is the table name for the ClassReviewLike entity.
+	// It exists in this package in order to avoid circular dependency with the "classreviewlike" package.
+	ClassReviewLikesInverseTable = "class_review_likes"
+	// ClassReviewLikesColumn is the table column denoting the class_review_likes relation/edge.
+	ClassReviewLikesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -84,4 +103,46 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByClassReviewsCount orders the results by class_reviews count.
+func ByClassReviewsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newClassReviewsStep(), opts...)
+	}
+}
+
+// ByClassReviews orders the results by class_reviews terms.
+func ByClassReviews(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newClassReviewsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByClassReviewLikesCount orders the results by class_review_likes count.
+func ByClassReviewLikesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newClassReviewLikesStep(), opts...)
+	}
+}
+
+// ByClassReviewLikes orders the results by class_review_likes terms.
+func ByClassReviewLikes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newClassReviewLikesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newClassReviewsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ClassReviewsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ClassReviewsTable, ClassReviewsColumn),
+	)
+}
+func newClassReviewLikesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ClassReviewLikesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ClassReviewLikesTable, ClassReviewLikesColumn),
+	)
 }

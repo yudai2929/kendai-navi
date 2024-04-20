@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreview"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreviewlike"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/predicate"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/user"
 )
@@ -112,9 +114,81 @@ func (uu *UserUpdate) SetNillableUpdatedAt(t *time.Time) *UserUpdate {
 	return uu
 }
 
+// AddClassReviewIDs adds the "class_reviews" edge to the ClassReview entity by IDs.
+func (uu *UserUpdate) AddClassReviewIDs(ids ...string) *UserUpdate {
+	uu.mutation.AddClassReviewIDs(ids...)
+	return uu
+}
+
+// AddClassReviews adds the "class_reviews" edges to the ClassReview entity.
+func (uu *UserUpdate) AddClassReviews(c ...*ClassReview) *UserUpdate {
+	ids := make([]string, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddClassReviewIDs(ids...)
+}
+
+// AddClassReviewLikeIDs adds the "class_review_likes" edge to the ClassReviewLike entity by IDs.
+func (uu *UserUpdate) AddClassReviewLikeIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddClassReviewLikeIDs(ids...)
+	return uu
+}
+
+// AddClassReviewLikes adds the "class_review_likes" edges to the ClassReviewLike entity.
+func (uu *UserUpdate) AddClassReviewLikes(c ...*ClassReviewLike) *UserUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddClassReviewLikeIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearClassReviews clears all "class_reviews" edges to the ClassReview entity.
+func (uu *UserUpdate) ClearClassReviews() *UserUpdate {
+	uu.mutation.ClearClassReviews()
+	return uu
+}
+
+// RemoveClassReviewIDs removes the "class_reviews" edge to ClassReview entities by IDs.
+func (uu *UserUpdate) RemoveClassReviewIDs(ids ...string) *UserUpdate {
+	uu.mutation.RemoveClassReviewIDs(ids...)
+	return uu
+}
+
+// RemoveClassReviews removes "class_reviews" edges to ClassReview entities.
+func (uu *UserUpdate) RemoveClassReviews(c ...*ClassReview) *UserUpdate {
+	ids := make([]string, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveClassReviewIDs(ids...)
+}
+
+// ClearClassReviewLikes clears all "class_review_likes" edges to the ClassReviewLike entity.
+func (uu *UserUpdate) ClearClassReviewLikes() *UserUpdate {
+	uu.mutation.ClearClassReviewLikes()
+	return uu
+}
+
+// RemoveClassReviewLikeIDs removes the "class_review_likes" edge to ClassReviewLike entities by IDs.
+func (uu *UserUpdate) RemoveClassReviewLikeIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveClassReviewLikeIDs(ids...)
+	return uu
+}
+
+// RemoveClassReviewLikes removes "class_review_likes" edges to ClassReviewLike entities.
+func (uu *UserUpdate) RemoveClassReviewLikes(c ...*ClassReviewLike) *UserUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveClassReviewLikeIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -170,6 +244,96 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if uu.mutation.ClassReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedClassReviewsIDs(); len(nodes) > 0 && !uu.mutation.ClassReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ClassReviewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ClassReviewLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedClassReviewLikesIDs(); len(nodes) > 0 && !uu.mutation.ClassReviewLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ClassReviewLikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -275,9 +439,81 @@ func (uuo *UserUpdateOne) SetNillableUpdatedAt(t *time.Time) *UserUpdateOne {
 	return uuo
 }
 
+// AddClassReviewIDs adds the "class_reviews" edge to the ClassReview entity by IDs.
+func (uuo *UserUpdateOne) AddClassReviewIDs(ids ...string) *UserUpdateOne {
+	uuo.mutation.AddClassReviewIDs(ids...)
+	return uuo
+}
+
+// AddClassReviews adds the "class_reviews" edges to the ClassReview entity.
+func (uuo *UserUpdateOne) AddClassReviews(c ...*ClassReview) *UserUpdateOne {
+	ids := make([]string, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddClassReviewIDs(ids...)
+}
+
+// AddClassReviewLikeIDs adds the "class_review_likes" edge to the ClassReviewLike entity by IDs.
+func (uuo *UserUpdateOne) AddClassReviewLikeIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddClassReviewLikeIDs(ids...)
+	return uuo
+}
+
+// AddClassReviewLikes adds the "class_review_likes" edges to the ClassReviewLike entity.
+func (uuo *UserUpdateOne) AddClassReviewLikes(c ...*ClassReviewLike) *UserUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddClassReviewLikeIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearClassReviews clears all "class_reviews" edges to the ClassReview entity.
+func (uuo *UserUpdateOne) ClearClassReviews() *UserUpdateOne {
+	uuo.mutation.ClearClassReviews()
+	return uuo
+}
+
+// RemoveClassReviewIDs removes the "class_reviews" edge to ClassReview entities by IDs.
+func (uuo *UserUpdateOne) RemoveClassReviewIDs(ids ...string) *UserUpdateOne {
+	uuo.mutation.RemoveClassReviewIDs(ids...)
+	return uuo
+}
+
+// RemoveClassReviews removes "class_reviews" edges to ClassReview entities.
+func (uuo *UserUpdateOne) RemoveClassReviews(c ...*ClassReview) *UserUpdateOne {
+	ids := make([]string, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveClassReviewIDs(ids...)
+}
+
+// ClearClassReviewLikes clears all "class_review_likes" edges to the ClassReviewLike entity.
+func (uuo *UserUpdateOne) ClearClassReviewLikes() *UserUpdateOne {
+	uuo.mutation.ClearClassReviewLikes()
+	return uuo
+}
+
+// RemoveClassReviewLikeIDs removes the "class_review_likes" edge to ClassReviewLike entities by IDs.
+func (uuo *UserUpdateOne) RemoveClassReviewLikeIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveClassReviewLikeIDs(ids...)
+	return uuo
+}
+
+// RemoveClassReviewLikes removes "class_review_likes" edges to ClassReviewLike entities.
+func (uuo *UserUpdateOne) RemoveClassReviewLikes(c ...*ClassReviewLike) *UserUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveClassReviewLikeIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -363,6 +599,96 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if uuo.mutation.ClassReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedClassReviewsIDs(); len(nodes) > 0 && !uuo.mutation.ClassReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ClassReviewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewsTable,
+			Columns: []string{user.ClassReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreview.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ClassReviewLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedClassReviewLikesIDs(); len(nodes) > 0 && !uuo.mutation.ClassReviewLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ClassReviewLikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ClassReviewLikesTable,
+			Columns: []string{user.ClassReviewLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(classreviewlike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

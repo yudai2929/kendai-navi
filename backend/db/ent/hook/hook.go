@@ -9,6 +9,30 @@ import (
 	"github.com/yudai2929/kendai-navi/backend/db/ent"
 )
 
+// The ClassReviewFunc type is an adapter to allow the use of ordinary
+// function as ClassReview mutator.
+type ClassReviewFunc func(context.Context, *ent.ClassReviewMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ClassReviewFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ClassReviewMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ClassReviewMutation", m)
+}
+
+// The ClassReviewLikeFunc type is an adapter to allow the use of ordinary
+// function as ClassReviewLike mutator.
+type ClassReviewLikeFunc func(context.Context, *ent.ClassReviewLikeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ClassReviewLikeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ClassReviewLikeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ClassReviewLikeMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

@@ -11,6 +11,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreview"
+	"github.com/yudai2929/kendai-navi/backend/db/ent/classreviewlike"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/predicate"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/user"
 )
@@ -24,25 +26,1992 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeUser = "User"
+	TypeClassReview     = "ClassReview"
+	TypeClassReviewLike = "ClassReviewLike"
+	TypeUser            = "User"
 )
+
+// ClassReviewMutation represents an operation that mutates the ClassReview nodes in the graph.
+type ClassReviewMutation struct {
+	config
+	op                        Op
+	typ                       string
+	id                        *string
+	class_id                  *int
+	addclass_id               *int
+	teacher_id                *int
+	addteacher_id             *int
+	comment                   *string
+	class_year                *int
+	addclass_year             *int
+	term                      *int
+	addterm                   *int
+	satisfaction_level        *int
+	addsatisfaction_level     *int
+	easy_level                *int
+	addeasy_level             *int
+	attendance_method         *int
+	addattendance_method      *int
+	evaluation_method         *int
+	addevaluation_method      *int
+	created_at                *time.Time
+	updated_at                *time.Time
+	clearedFields             map[string]struct{}
+	users                     *string
+	clearedusers              bool
+	class_review_likes        map[int]struct{}
+	removedclass_review_likes map[int]struct{}
+	clearedclass_review_likes bool
+	done                      bool
+	oldValue                  func(context.Context) (*ClassReview, error)
+	predicates                []predicate.ClassReview
+}
+
+var _ ent.Mutation = (*ClassReviewMutation)(nil)
+
+// classreviewOption allows management of the mutation configuration using functional options.
+type classreviewOption func(*ClassReviewMutation)
+
+// newClassReviewMutation creates new mutation for the ClassReview entity.
+func newClassReviewMutation(c config, op Op, opts ...classreviewOption) *ClassReviewMutation {
+	m := &ClassReviewMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeClassReview,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withClassReviewID sets the ID field of the mutation.
+func withClassReviewID(id string) classreviewOption {
+	return func(m *ClassReviewMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ClassReview
+		)
+		m.oldValue = func(ctx context.Context) (*ClassReview, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ClassReview.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withClassReview sets the old ClassReview of the mutation.
+func withClassReview(node *ClassReview) classreviewOption {
+	return func(m *ClassReviewMutation) {
+		m.oldValue = func(context.Context) (*ClassReview, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ClassReviewMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ClassReviewMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ClassReview entities.
+func (m *ClassReviewMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ClassReviewMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ClassReviewMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ClassReview.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *ClassReviewMutation) SetUserID(s string) {
+	m.users = &s
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ClassReviewMutation) UserID() (r string, exists bool) {
+	v := m.users
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ClassReviewMutation) ResetUserID() {
+	m.users = nil
+}
+
+// SetClassID sets the "class_id" field.
+func (m *ClassReviewMutation) SetClassID(i int) {
+	m.class_id = &i
+	m.addclass_id = nil
+}
+
+// ClassID returns the value of the "class_id" field in the mutation.
+func (m *ClassReviewMutation) ClassID() (r int, exists bool) {
+	v := m.class_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClassID returns the old "class_id" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldClassID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClassID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClassID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClassID: %w", err)
+	}
+	return oldValue.ClassID, nil
+}
+
+// AddClassID adds i to the "class_id" field.
+func (m *ClassReviewMutation) AddClassID(i int) {
+	if m.addclass_id != nil {
+		*m.addclass_id += i
+	} else {
+		m.addclass_id = &i
+	}
+}
+
+// AddedClassID returns the value that was added to the "class_id" field in this mutation.
+func (m *ClassReviewMutation) AddedClassID() (r int, exists bool) {
+	v := m.addclass_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClassID resets all changes to the "class_id" field.
+func (m *ClassReviewMutation) ResetClassID() {
+	m.class_id = nil
+	m.addclass_id = nil
+}
+
+// SetTeacherID sets the "teacher_id" field.
+func (m *ClassReviewMutation) SetTeacherID(i int) {
+	m.teacher_id = &i
+	m.addteacher_id = nil
+}
+
+// TeacherID returns the value of the "teacher_id" field in the mutation.
+func (m *ClassReviewMutation) TeacherID() (r int, exists bool) {
+	v := m.teacher_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTeacherID returns the old "teacher_id" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldTeacherID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTeacherID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTeacherID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTeacherID: %w", err)
+	}
+	return oldValue.TeacherID, nil
+}
+
+// AddTeacherID adds i to the "teacher_id" field.
+func (m *ClassReviewMutation) AddTeacherID(i int) {
+	if m.addteacher_id != nil {
+		*m.addteacher_id += i
+	} else {
+		m.addteacher_id = &i
+	}
+}
+
+// AddedTeacherID returns the value that was added to the "teacher_id" field in this mutation.
+func (m *ClassReviewMutation) AddedTeacherID() (r int, exists bool) {
+	v := m.addteacher_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTeacherID resets all changes to the "teacher_id" field.
+func (m *ClassReviewMutation) ResetTeacherID() {
+	m.teacher_id = nil
+	m.addteacher_id = nil
+}
+
+// SetComment sets the "comment" field.
+func (m *ClassReviewMutation) SetComment(s string) {
+	m.comment = &s
+}
+
+// Comment returns the value of the "comment" field in the mutation.
+func (m *ClassReviewMutation) Comment() (r string, exists bool) {
+	v := m.comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComment returns the old "comment" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldComment(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComment: %w", err)
+	}
+	return oldValue.Comment, nil
+}
+
+// ResetComment resets all changes to the "comment" field.
+func (m *ClassReviewMutation) ResetComment() {
+	m.comment = nil
+}
+
+// SetClassYear sets the "class_year" field.
+func (m *ClassReviewMutation) SetClassYear(i int) {
+	m.class_year = &i
+	m.addclass_year = nil
+}
+
+// ClassYear returns the value of the "class_year" field in the mutation.
+func (m *ClassReviewMutation) ClassYear() (r int, exists bool) {
+	v := m.class_year
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClassYear returns the old "class_year" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldClassYear(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClassYear is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClassYear requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClassYear: %w", err)
+	}
+	return oldValue.ClassYear, nil
+}
+
+// AddClassYear adds i to the "class_year" field.
+func (m *ClassReviewMutation) AddClassYear(i int) {
+	if m.addclass_year != nil {
+		*m.addclass_year += i
+	} else {
+		m.addclass_year = &i
+	}
+}
+
+// AddedClassYear returns the value that was added to the "class_year" field in this mutation.
+func (m *ClassReviewMutation) AddedClassYear() (r int, exists bool) {
+	v := m.addclass_year
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClassYear resets all changes to the "class_year" field.
+func (m *ClassReviewMutation) ResetClassYear() {
+	m.class_year = nil
+	m.addclass_year = nil
+}
+
+// SetTerm sets the "term" field.
+func (m *ClassReviewMutation) SetTerm(i int) {
+	m.term = &i
+	m.addterm = nil
+}
+
+// Term returns the value of the "term" field in the mutation.
+func (m *ClassReviewMutation) Term() (r int, exists bool) {
+	v := m.term
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTerm returns the old "term" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldTerm(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTerm is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTerm requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTerm: %w", err)
+	}
+	return oldValue.Term, nil
+}
+
+// AddTerm adds i to the "term" field.
+func (m *ClassReviewMutation) AddTerm(i int) {
+	if m.addterm != nil {
+		*m.addterm += i
+	} else {
+		m.addterm = &i
+	}
+}
+
+// AddedTerm returns the value that was added to the "term" field in this mutation.
+func (m *ClassReviewMutation) AddedTerm() (r int, exists bool) {
+	v := m.addterm
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTerm resets all changes to the "term" field.
+func (m *ClassReviewMutation) ResetTerm() {
+	m.term = nil
+	m.addterm = nil
+}
+
+// SetSatisfactionLevel sets the "satisfaction_level" field.
+func (m *ClassReviewMutation) SetSatisfactionLevel(i int) {
+	m.satisfaction_level = &i
+	m.addsatisfaction_level = nil
+}
+
+// SatisfactionLevel returns the value of the "satisfaction_level" field in the mutation.
+func (m *ClassReviewMutation) SatisfactionLevel() (r int, exists bool) {
+	v := m.satisfaction_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSatisfactionLevel returns the old "satisfaction_level" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldSatisfactionLevel(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSatisfactionLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSatisfactionLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSatisfactionLevel: %w", err)
+	}
+	return oldValue.SatisfactionLevel, nil
+}
+
+// AddSatisfactionLevel adds i to the "satisfaction_level" field.
+func (m *ClassReviewMutation) AddSatisfactionLevel(i int) {
+	if m.addsatisfaction_level != nil {
+		*m.addsatisfaction_level += i
+	} else {
+		m.addsatisfaction_level = &i
+	}
+}
+
+// AddedSatisfactionLevel returns the value that was added to the "satisfaction_level" field in this mutation.
+func (m *ClassReviewMutation) AddedSatisfactionLevel() (r int, exists bool) {
+	v := m.addsatisfaction_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSatisfactionLevel resets all changes to the "satisfaction_level" field.
+func (m *ClassReviewMutation) ResetSatisfactionLevel() {
+	m.satisfaction_level = nil
+	m.addsatisfaction_level = nil
+}
+
+// SetEasyLevel sets the "easy_level" field.
+func (m *ClassReviewMutation) SetEasyLevel(i int) {
+	m.easy_level = &i
+	m.addeasy_level = nil
+}
+
+// EasyLevel returns the value of the "easy_level" field in the mutation.
+func (m *ClassReviewMutation) EasyLevel() (r int, exists bool) {
+	v := m.easy_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEasyLevel returns the old "easy_level" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldEasyLevel(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEasyLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEasyLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEasyLevel: %w", err)
+	}
+	return oldValue.EasyLevel, nil
+}
+
+// AddEasyLevel adds i to the "easy_level" field.
+func (m *ClassReviewMutation) AddEasyLevel(i int) {
+	if m.addeasy_level != nil {
+		*m.addeasy_level += i
+	} else {
+		m.addeasy_level = &i
+	}
+}
+
+// AddedEasyLevel returns the value that was added to the "easy_level" field in this mutation.
+func (m *ClassReviewMutation) AddedEasyLevel() (r int, exists bool) {
+	v := m.addeasy_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEasyLevel resets all changes to the "easy_level" field.
+func (m *ClassReviewMutation) ResetEasyLevel() {
+	m.easy_level = nil
+	m.addeasy_level = nil
+}
+
+// SetAttendanceMethod sets the "attendance_method" field.
+func (m *ClassReviewMutation) SetAttendanceMethod(i int) {
+	m.attendance_method = &i
+	m.addattendance_method = nil
+}
+
+// AttendanceMethod returns the value of the "attendance_method" field in the mutation.
+func (m *ClassReviewMutation) AttendanceMethod() (r int, exists bool) {
+	v := m.attendance_method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttendanceMethod returns the old "attendance_method" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldAttendanceMethod(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttendanceMethod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttendanceMethod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttendanceMethod: %w", err)
+	}
+	return oldValue.AttendanceMethod, nil
+}
+
+// AddAttendanceMethod adds i to the "attendance_method" field.
+func (m *ClassReviewMutation) AddAttendanceMethod(i int) {
+	if m.addattendance_method != nil {
+		*m.addattendance_method += i
+	} else {
+		m.addattendance_method = &i
+	}
+}
+
+// AddedAttendanceMethod returns the value that was added to the "attendance_method" field in this mutation.
+func (m *ClassReviewMutation) AddedAttendanceMethod() (r int, exists bool) {
+	v := m.addattendance_method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttendanceMethod resets all changes to the "attendance_method" field.
+func (m *ClassReviewMutation) ResetAttendanceMethod() {
+	m.attendance_method = nil
+	m.addattendance_method = nil
+}
+
+// SetEvaluationMethod sets the "evaluation_method" field.
+func (m *ClassReviewMutation) SetEvaluationMethod(i int) {
+	m.evaluation_method = &i
+	m.addevaluation_method = nil
+}
+
+// EvaluationMethod returns the value of the "evaluation_method" field in the mutation.
+func (m *ClassReviewMutation) EvaluationMethod() (r int, exists bool) {
+	v := m.evaluation_method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEvaluationMethod returns the old "evaluation_method" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldEvaluationMethod(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEvaluationMethod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEvaluationMethod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEvaluationMethod: %w", err)
+	}
+	return oldValue.EvaluationMethod, nil
+}
+
+// AddEvaluationMethod adds i to the "evaluation_method" field.
+func (m *ClassReviewMutation) AddEvaluationMethod(i int) {
+	if m.addevaluation_method != nil {
+		*m.addevaluation_method += i
+	} else {
+		m.addevaluation_method = &i
+	}
+}
+
+// AddedEvaluationMethod returns the value that was added to the "evaluation_method" field in this mutation.
+func (m *ClassReviewMutation) AddedEvaluationMethod() (r int, exists bool) {
+	v := m.addevaluation_method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEvaluationMethod resets all changes to the "evaluation_method" field.
+func (m *ClassReviewMutation) ResetEvaluationMethod() {
+	m.evaluation_method = nil
+	m.addevaluation_method = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ClassReviewMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ClassReviewMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ClassReviewMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ClassReviewMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ClassReviewMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ClassReview entity.
+// If the ClassReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ClassReviewMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUsersID sets the "users" edge to the User entity by id.
+func (m *ClassReviewMutation) SetUsersID(id string) {
+	m.users = &id
+}
+
+// ClearUsers clears the "users" edge to the User entity.
+func (m *ClassReviewMutation) ClearUsers() {
+	m.clearedusers = true
+	m.clearedFields[classreview.FieldUserID] = struct{}{}
+}
+
+// UsersCleared reports if the "users" edge to the User entity was cleared.
+func (m *ClassReviewMutation) UsersCleared() bool {
+	return m.clearedusers
+}
+
+// UsersID returns the "users" edge ID in the mutation.
+func (m *ClassReviewMutation) UsersID() (id string, exists bool) {
+	if m.users != nil {
+		return *m.users, true
+	}
+	return
+}
+
+// UsersIDs returns the "users" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UsersID instead. It exists only for internal usage by the builders.
+func (m *ClassReviewMutation) UsersIDs() (ids []string) {
+	if id := m.users; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUsers resets all changes to the "users" edge.
+func (m *ClassReviewMutation) ResetUsers() {
+	m.users = nil
+	m.clearedusers = false
+}
+
+// AddClassReviewLikeIDs adds the "class_review_likes" edge to the ClassReviewLike entity by ids.
+func (m *ClassReviewMutation) AddClassReviewLikeIDs(ids ...int) {
+	if m.class_review_likes == nil {
+		m.class_review_likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.class_review_likes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearClassReviewLikes clears the "class_review_likes" edge to the ClassReviewLike entity.
+func (m *ClassReviewMutation) ClearClassReviewLikes() {
+	m.clearedclass_review_likes = true
+}
+
+// ClassReviewLikesCleared reports if the "class_review_likes" edge to the ClassReviewLike entity was cleared.
+func (m *ClassReviewMutation) ClassReviewLikesCleared() bool {
+	return m.clearedclass_review_likes
+}
+
+// RemoveClassReviewLikeIDs removes the "class_review_likes" edge to the ClassReviewLike entity by IDs.
+func (m *ClassReviewMutation) RemoveClassReviewLikeIDs(ids ...int) {
+	if m.removedclass_review_likes == nil {
+		m.removedclass_review_likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.class_review_likes, ids[i])
+		m.removedclass_review_likes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedClassReviewLikes returns the removed IDs of the "class_review_likes" edge to the ClassReviewLike entity.
+func (m *ClassReviewMutation) RemovedClassReviewLikesIDs() (ids []int) {
+	for id := range m.removedclass_review_likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ClassReviewLikesIDs returns the "class_review_likes" edge IDs in the mutation.
+func (m *ClassReviewMutation) ClassReviewLikesIDs() (ids []int) {
+	for id := range m.class_review_likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetClassReviewLikes resets all changes to the "class_review_likes" edge.
+func (m *ClassReviewMutation) ResetClassReviewLikes() {
+	m.class_review_likes = nil
+	m.clearedclass_review_likes = false
+	m.removedclass_review_likes = nil
+}
+
+// Where appends a list predicates to the ClassReviewMutation builder.
+func (m *ClassReviewMutation) Where(ps ...predicate.ClassReview) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ClassReviewMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ClassReviewMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ClassReview, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ClassReviewMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ClassReviewMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ClassReview).
+func (m *ClassReviewMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ClassReviewMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.users != nil {
+		fields = append(fields, classreview.FieldUserID)
+	}
+	if m.class_id != nil {
+		fields = append(fields, classreview.FieldClassID)
+	}
+	if m.teacher_id != nil {
+		fields = append(fields, classreview.FieldTeacherID)
+	}
+	if m.comment != nil {
+		fields = append(fields, classreview.FieldComment)
+	}
+	if m.class_year != nil {
+		fields = append(fields, classreview.FieldClassYear)
+	}
+	if m.term != nil {
+		fields = append(fields, classreview.FieldTerm)
+	}
+	if m.satisfaction_level != nil {
+		fields = append(fields, classreview.FieldSatisfactionLevel)
+	}
+	if m.easy_level != nil {
+		fields = append(fields, classreview.FieldEasyLevel)
+	}
+	if m.attendance_method != nil {
+		fields = append(fields, classreview.FieldAttendanceMethod)
+	}
+	if m.evaluation_method != nil {
+		fields = append(fields, classreview.FieldEvaluationMethod)
+	}
+	if m.created_at != nil {
+		fields = append(fields, classreview.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, classreview.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ClassReviewMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case classreview.FieldUserID:
+		return m.UserID()
+	case classreview.FieldClassID:
+		return m.ClassID()
+	case classreview.FieldTeacherID:
+		return m.TeacherID()
+	case classreview.FieldComment:
+		return m.Comment()
+	case classreview.FieldClassYear:
+		return m.ClassYear()
+	case classreview.FieldTerm:
+		return m.Term()
+	case classreview.FieldSatisfactionLevel:
+		return m.SatisfactionLevel()
+	case classreview.FieldEasyLevel:
+		return m.EasyLevel()
+	case classreview.FieldAttendanceMethod:
+		return m.AttendanceMethod()
+	case classreview.FieldEvaluationMethod:
+		return m.EvaluationMethod()
+	case classreview.FieldCreatedAt:
+		return m.CreatedAt()
+	case classreview.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ClassReviewMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case classreview.FieldUserID:
+		return m.OldUserID(ctx)
+	case classreview.FieldClassID:
+		return m.OldClassID(ctx)
+	case classreview.FieldTeacherID:
+		return m.OldTeacherID(ctx)
+	case classreview.FieldComment:
+		return m.OldComment(ctx)
+	case classreview.FieldClassYear:
+		return m.OldClassYear(ctx)
+	case classreview.FieldTerm:
+		return m.OldTerm(ctx)
+	case classreview.FieldSatisfactionLevel:
+		return m.OldSatisfactionLevel(ctx)
+	case classreview.FieldEasyLevel:
+		return m.OldEasyLevel(ctx)
+	case classreview.FieldAttendanceMethod:
+		return m.OldAttendanceMethod(ctx)
+	case classreview.FieldEvaluationMethod:
+		return m.OldEvaluationMethod(ctx)
+	case classreview.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case classreview.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ClassReview field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ClassReviewMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case classreview.FieldUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case classreview.FieldClassID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClassID(v)
+		return nil
+	case classreview.FieldTeacherID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTeacherID(v)
+		return nil
+	case classreview.FieldComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComment(v)
+		return nil
+	case classreview.FieldClassYear:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClassYear(v)
+		return nil
+	case classreview.FieldTerm:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTerm(v)
+		return nil
+	case classreview.FieldSatisfactionLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSatisfactionLevel(v)
+		return nil
+	case classreview.FieldEasyLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEasyLevel(v)
+		return nil
+	case classreview.FieldAttendanceMethod:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttendanceMethod(v)
+		return nil
+	case classreview.FieldEvaluationMethod:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEvaluationMethod(v)
+		return nil
+	case classreview.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case classreview.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReview field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ClassReviewMutation) AddedFields() []string {
+	var fields []string
+	if m.addclass_id != nil {
+		fields = append(fields, classreview.FieldClassID)
+	}
+	if m.addteacher_id != nil {
+		fields = append(fields, classreview.FieldTeacherID)
+	}
+	if m.addclass_year != nil {
+		fields = append(fields, classreview.FieldClassYear)
+	}
+	if m.addterm != nil {
+		fields = append(fields, classreview.FieldTerm)
+	}
+	if m.addsatisfaction_level != nil {
+		fields = append(fields, classreview.FieldSatisfactionLevel)
+	}
+	if m.addeasy_level != nil {
+		fields = append(fields, classreview.FieldEasyLevel)
+	}
+	if m.addattendance_method != nil {
+		fields = append(fields, classreview.FieldAttendanceMethod)
+	}
+	if m.addevaluation_method != nil {
+		fields = append(fields, classreview.FieldEvaluationMethod)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ClassReviewMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case classreview.FieldClassID:
+		return m.AddedClassID()
+	case classreview.FieldTeacherID:
+		return m.AddedTeacherID()
+	case classreview.FieldClassYear:
+		return m.AddedClassYear()
+	case classreview.FieldTerm:
+		return m.AddedTerm()
+	case classreview.FieldSatisfactionLevel:
+		return m.AddedSatisfactionLevel()
+	case classreview.FieldEasyLevel:
+		return m.AddedEasyLevel()
+	case classreview.FieldAttendanceMethod:
+		return m.AddedAttendanceMethod()
+	case classreview.FieldEvaluationMethod:
+		return m.AddedEvaluationMethod()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ClassReviewMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case classreview.FieldClassID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClassID(v)
+		return nil
+	case classreview.FieldTeacherID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTeacherID(v)
+		return nil
+	case classreview.FieldClassYear:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClassYear(v)
+		return nil
+	case classreview.FieldTerm:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTerm(v)
+		return nil
+	case classreview.FieldSatisfactionLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSatisfactionLevel(v)
+		return nil
+	case classreview.FieldEasyLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEasyLevel(v)
+		return nil
+	case classreview.FieldAttendanceMethod:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttendanceMethod(v)
+		return nil
+	case classreview.FieldEvaluationMethod:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEvaluationMethod(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReview numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ClassReviewMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ClassReviewMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ClassReviewMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ClassReview nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ClassReviewMutation) ResetField(name string) error {
+	switch name {
+	case classreview.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case classreview.FieldClassID:
+		m.ResetClassID()
+		return nil
+	case classreview.FieldTeacherID:
+		m.ResetTeacherID()
+		return nil
+	case classreview.FieldComment:
+		m.ResetComment()
+		return nil
+	case classreview.FieldClassYear:
+		m.ResetClassYear()
+		return nil
+	case classreview.FieldTerm:
+		m.ResetTerm()
+		return nil
+	case classreview.FieldSatisfactionLevel:
+		m.ResetSatisfactionLevel()
+		return nil
+	case classreview.FieldEasyLevel:
+		m.ResetEasyLevel()
+		return nil
+	case classreview.FieldAttendanceMethod:
+		m.ResetAttendanceMethod()
+		return nil
+	case classreview.FieldEvaluationMethod:
+		m.ResetEvaluationMethod()
+		return nil
+	case classreview.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case classreview.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReview field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ClassReviewMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.users != nil {
+		edges = append(edges, classreview.EdgeUsers)
+	}
+	if m.class_review_likes != nil {
+		edges = append(edges, classreview.EdgeClassReviewLikes)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ClassReviewMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case classreview.EdgeUsers:
+		if id := m.users; id != nil {
+			return []ent.Value{*id}
+		}
+	case classreview.EdgeClassReviewLikes:
+		ids := make([]ent.Value, 0, len(m.class_review_likes))
+		for id := range m.class_review_likes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ClassReviewMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedclass_review_likes != nil {
+		edges = append(edges, classreview.EdgeClassReviewLikes)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ClassReviewMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case classreview.EdgeClassReviewLikes:
+		ids := make([]ent.Value, 0, len(m.removedclass_review_likes))
+		for id := range m.removedclass_review_likes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ClassReviewMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedusers {
+		edges = append(edges, classreview.EdgeUsers)
+	}
+	if m.clearedclass_review_likes {
+		edges = append(edges, classreview.EdgeClassReviewLikes)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ClassReviewMutation) EdgeCleared(name string) bool {
+	switch name {
+	case classreview.EdgeUsers:
+		return m.clearedusers
+	case classreview.EdgeClassReviewLikes:
+		return m.clearedclass_review_likes
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ClassReviewMutation) ClearEdge(name string) error {
+	switch name {
+	case classreview.EdgeUsers:
+		m.ClearUsers()
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReview unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ClassReviewMutation) ResetEdge(name string) error {
+	switch name {
+	case classreview.EdgeUsers:
+		m.ResetUsers()
+		return nil
+	case classreview.EdgeClassReviewLikes:
+		m.ResetClassReviewLikes()
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReview edge %s", name)
+}
+
+// ClassReviewLikeMutation represents an operation that mutates the ClassReviewLike nodes in the graph.
+type ClassReviewLikeMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *int
+	created_at           *time.Time
+	updated_at           *time.Time
+	clearedFields        map[string]struct{}
+	users                *string
+	clearedusers         bool
+	class_reviews        *string
+	clearedclass_reviews bool
+	done                 bool
+	oldValue             func(context.Context) (*ClassReviewLike, error)
+	predicates           []predicate.ClassReviewLike
+}
+
+var _ ent.Mutation = (*ClassReviewLikeMutation)(nil)
+
+// classreviewlikeOption allows management of the mutation configuration using functional options.
+type classreviewlikeOption func(*ClassReviewLikeMutation)
+
+// newClassReviewLikeMutation creates new mutation for the ClassReviewLike entity.
+func newClassReviewLikeMutation(c config, op Op, opts ...classreviewlikeOption) *ClassReviewLikeMutation {
+	m := &ClassReviewLikeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeClassReviewLike,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withClassReviewLikeID sets the ID field of the mutation.
+func withClassReviewLikeID(id int) classreviewlikeOption {
+	return func(m *ClassReviewLikeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ClassReviewLike
+		)
+		m.oldValue = func(ctx context.Context) (*ClassReviewLike, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ClassReviewLike.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withClassReviewLike sets the old ClassReviewLike of the mutation.
+func withClassReviewLike(node *ClassReviewLike) classreviewlikeOption {
+	return func(m *ClassReviewLikeMutation) {
+		m.oldValue = func(context.Context) (*ClassReviewLike, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ClassReviewLikeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ClassReviewLikeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ClassReviewLikeMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ClassReviewLikeMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ClassReviewLike.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *ClassReviewLikeMutation) SetUserID(s string) {
+	m.users = &s
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ClassReviewLikeMutation) UserID() (r string, exists bool) {
+	v := m.users
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ClassReviewLike entity.
+// If the ClassReviewLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewLikeMutation) OldUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ClassReviewLikeMutation) ResetUserID() {
+	m.users = nil
+}
+
+// SetClassReviewID sets the "class_review_id" field.
+func (m *ClassReviewLikeMutation) SetClassReviewID(s string) {
+	m.class_reviews = &s
+}
+
+// ClassReviewID returns the value of the "class_review_id" field in the mutation.
+func (m *ClassReviewLikeMutation) ClassReviewID() (r string, exists bool) {
+	v := m.class_reviews
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClassReviewID returns the old "class_review_id" field's value of the ClassReviewLike entity.
+// If the ClassReviewLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewLikeMutation) OldClassReviewID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClassReviewID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClassReviewID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClassReviewID: %w", err)
+	}
+	return oldValue.ClassReviewID, nil
+}
+
+// ResetClassReviewID resets all changes to the "class_review_id" field.
+func (m *ClassReviewLikeMutation) ResetClassReviewID() {
+	m.class_reviews = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ClassReviewLikeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ClassReviewLikeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ClassReviewLike entity.
+// If the ClassReviewLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewLikeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ClassReviewLikeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ClassReviewLikeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ClassReviewLikeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ClassReviewLike entity.
+// If the ClassReviewLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ClassReviewLikeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ClassReviewLikeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUsersID sets the "users" edge to the User entity by id.
+func (m *ClassReviewLikeMutation) SetUsersID(id string) {
+	m.users = &id
+}
+
+// ClearUsers clears the "users" edge to the User entity.
+func (m *ClassReviewLikeMutation) ClearUsers() {
+	m.clearedusers = true
+	m.clearedFields[classreviewlike.FieldUserID] = struct{}{}
+}
+
+// UsersCleared reports if the "users" edge to the User entity was cleared.
+func (m *ClassReviewLikeMutation) UsersCleared() bool {
+	return m.clearedusers
+}
+
+// UsersID returns the "users" edge ID in the mutation.
+func (m *ClassReviewLikeMutation) UsersID() (id string, exists bool) {
+	if m.users != nil {
+		return *m.users, true
+	}
+	return
+}
+
+// UsersIDs returns the "users" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UsersID instead. It exists only for internal usage by the builders.
+func (m *ClassReviewLikeMutation) UsersIDs() (ids []string) {
+	if id := m.users; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUsers resets all changes to the "users" edge.
+func (m *ClassReviewLikeMutation) ResetUsers() {
+	m.users = nil
+	m.clearedusers = false
+}
+
+// SetClassReviewsID sets the "class_reviews" edge to the ClassReview entity by id.
+func (m *ClassReviewLikeMutation) SetClassReviewsID(id string) {
+	m.class_reviews = &id
+}
+
+// ClearClassReviews clears the "class_reviews" edge to the ClassReview entity.
+func (m *ClassReviewLikeMutation) ClearClassReviews() {
+	m.clearedclass_reviews = true
+	m.clearedFields[classreviewlike.FieldClassReviewID] = struct{}{}
+}
+
+// ClassReviewsCleared reports if the "class_reviews" edge to the ClassReview entity was cleared.
+func (m *ClassReviewLikeMutation) ClassReviewsCleared() bool {
+	return m.clearedclass_reviews
+}
+
+// ClassReviewsID returns the "class_reviews" edge ID in the mutation.
+func (m *ClassReviewLikeMutation) ClassReviewsID() (id string, exists bool) {
+	if m.class_reviews != nil {
+		return *m.class_reviews, true
+	}
+	return
+}
+
+// ClassReviewsIDs returns the "class_reviews" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ClassReviewsID instead. It exists only for internal usage by the builders.
+func (m *ClassReviewLikeMutation) ClassReviewsIDs() (ids []string) {
+	if id := m.class_reviews; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetClassReviews resets all changes to the "class_reviews" edge.
+func (m *ClassReviewLikeMutation) ResetClassReviews() {
+	m.class_reviews = nil
+	m.clearedclass_reviews = false
+}
+
+// Where appends a list predicates to the ClassReviewLikeMutation builder.
+func (m *ClassReviewLikeMutation) Where(ps ...predicate.ClassReviewLike) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ClassReviewLikeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ClassReviewLikeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ClassReviewLike, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ClassReviewLikeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ClassReviewLikeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ClassReviewLike).
+func (m *ClassReviewLikeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ClassReviewLikeMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.users != nil {
+		fields = append(fields, classreviewlike.FieldUserID)
+	}
+	if m.class_reviews != nil {
+		fields = append(fields, classreviewlike.FieldClassReviewID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, classreviewlike.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, classreviewlike.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ClassReviewLikeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case classreviewlike.FieldUserID:
+		return m.UserID()
+	case classreviewlike.FieldClassReviewID:
+		return m.ClassReviewID()
+	case classreviewlike.FieldCreatedAt:
+		return m.CreatedAt()
+	case classreviewlike.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ClassReviewLikeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case classreviewlike.FieldUserID:
+		return m.OldUserID(ctx)
+	case classreviewlike.FieldClassReviewID:
+		return m.OldClassReviewID(ctx)
+	case classreviewlike.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case classreviewlike.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ClassReviewLike field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ClassReviewLikeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case classreviewlike.FieldUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case classreviewlike.FieldClassReviewID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClassReviewID(v)
+		return nil
+	case classreviewlike.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case classreviewlike.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReviewLike field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ClassReviewLikeMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ClassReviewLikeMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ClassReviewLikeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ClassReviewLike numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ClassReviewLikeMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ClassReviewLikeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ClassReviewLikeMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ClassReviewLike nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ClassReviewLikeMutation) ResetField(name string) error {
+	switch name {
+	case classreviewlike.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case classreviewlike.FieldClassReviewID:
+		m.ResetClassReviewID()
+		return nil
+	case classreviewlike.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case classreviewlike.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReviewLike field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ClassReviewLikeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.users != nil {
+		edges = append(edges, classreviewlike.EdgeUsers)
+	}
+	if m.class_reviews != nil {
+		edges = append(edges, classreviewlike.EdgeClassReviews)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ClassReviewLikeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case classreviewlike.EdgeUsers:
+		if id := m.users; id != nil {
+			return []ent.Value{*id}
+		}
+	case classreviewlike.EdgeClassReviews:
+		if id := m.class_reviews; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ClassReviewLikeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ClassReviewLikeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ClassReviewLikeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedusers {
+		edges = append(edges, classreviewlike.EdgeUsers)
+	}
+	if m.clearedclass_reviews {
+		edges = append(edges, classreviewlike.EdgeClassReviews)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ClassReviewLikeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case classreviewlike.EdgeUsers:
+		return m.clearedusers
+	case classreviewlike.EdgeClassReviews:
+		return m.clearedclass_reviews
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ClassReviewLikeMutation) ClearEdge(name string) error {
+	switch name {
+	case classreviewlike.EdgeUsers:
+		m.ClearUsers()
+		return nil
+	case classreviewlike.EdgeClassReviews:
+		m.ClearClassReviews()
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReviewLike unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ClassReviewLikeMutation) ResetEdge(name string) error {
+	switch name {
+	case classreviewlike.EdgeUsers:
+		m.ResetUsers()
+		return nil
+	case classreviewlike.EdgeClassReviews:
+		m.ResetClassReviews()
+		return nil
+	}
+	return fmt.Errorf("unknown ClassReviewLike edge %s", name)
+}
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *string
-	nickname          *string
-	firebase_uid      *string
-	email             *string
-	profile_image_url *string
-	created_at        *time.Time
-	updated_at        *time.Time
-	clearedFields     map[string]struct{}
-	done              bool
-	oldValue          func(context.Context) (*User, error)
-	predicates        []predicate.User
+	op                        Op
+	typ                       string
+	id                        *string
+	nickname                  *string
+	firebase_uid              *string
+	email                     *string
+	profile_image_url         *string
+	created_at                *time.Time
+	updated_at                *time.Time
+	clearedFields             map[string]struct{}
+	class_reviews             map[string]struct{}
+	removedclass_reviews      map[string]struct{}
+	clearedclass_reviews      bool
+	class_review_likes        map[int]struct{}
+	removedclass_review_likes map[int]struct{}
+	clearedclass_review_likes bool
+	done                      bool
+	oldValue                  func(context.Context) (*User, error)
+	predicates                []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -365,6 +2334,114 @@ func (m *UserMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// AddClassReviewIDs adds the "class_reviews" edge to the ClassReview entity by ids.
+func (m *UserMutation) AddClassReviewIDs(ids ...string) {
+	if m.class_reviews == nil {
+		m.class_reviews = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.class_reviews[ids[i]] = struct{}{}
+	}
+}
+
+// ClearClassReviews clears the "class_reviews" edge to the ClassReview entity.
+func (m *UserMutation) ClearClassReviews() {
+	m.clearedclass_reviews = true
+}
+
+// ClassReviewsCleared reports if the "class_reviews" edge to the ClassReview entity was cleared.
+func (m *UserMutation) ClassReviewsCleared() bool {
+	return m.clearedclass_reviews
+}
+
+// RemoveClassReviewIDs removes the "class_reviews" edge to the ClassReview entity by IDs.
+func (m *UserMutation) RemoveClassReviewIDs(ids ...string) {
+	if m.removedclass_reviews == nil {
+		m.removedclass_reviews = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.class_reviews, ids[i])
+		m.removedclass_reviews[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedClassReviews returns the removed IDs of the "class_reviews" edge to the ClassReview entity.
+func (m *UserMutation) RemovedClassReviewsIDs() (ids []string) {
+	for id := range m.removedclass_reviews {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ClassReviewsIDs returns the "class_reviews" edge IDs in the mutation.
+func (m *UserMutation) ClassReviewsIDs() (ids []string) {
+	for id := range m.class_reviews {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetClassReviews resets all changes to the "class_reviews" edge.
+func (m *UserMutation) ResetClassReviews() {
+	m.class_reviews = nil
+	m.clearedclass_reviews = false
+	m.removedclass_reviews = nil
+}
+
+// AddClassReviewLikeIDs adds the "class_review_likes" edge to the ClassReviewLike entity by ids.
+func (m *UserMutation) AddClassReviewLikeIDs(ids ...int) {
+	if m.class_review_likes == nil {
+		m.class_review_likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.class_review_likes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearClassReviewLikes clears the "class_review_likes" edge to the ClassReviewLike entity.
+func (m *UserMutation) ClearClassReviewLikes() {
+	m.clearedclass_review_likes = true
+}
+
+// ClassReviewLikesCleared reports if the "class_review_likes" edge to the ClassReviewLike entity was cleared.
+func (m *UserMutation) ClassReviewLikesCleared() bool {
+	return m.clearedclass_review_likes
+}
+
+// RemoveClassReviewLikeIDs removes the "class_review_likes" edge to the ClassReviewLike entity by IDs.
+func (m *UserMutation) RemoveClassReviewLikeIDs(ids ...int) {
+	if m.removedclass_review_likes == nil {
+		m.removedclass_review_likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.class_review_likes, ids[i])
+		m.removedclass_review_likes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedClassReviewLikes returns the removed IDs of the "class_review_likes" edge to the ClassReviewLike entity.
+func (m *UserMutation) RemovedClassReviewLikesIDs() (ids []int) {
+	for id := range m.removedclass_review_likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ClassReviewLikesIDs returns the "class_review_likes" edge IDs in the mutation.
+func (m *UserMutation) ClassReviewLikesIDs() (ids []int) {
+	for id := range m.class_review_likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetClassReviewLikes resets all changes to the "class_review_likes" edge.
+func (m *UserMutation) ResetClassReviewLikes() {
+	m.class_review_likes = nil
+	m.clearedclass_review_likes = false
+	m.removedclass_review_likes = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -583,48 +2660,110 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.class_reviews != nil {
+		edges = append(edges, user.EdgeClassReviews)
+	}
+	if m.class_review_likes != nil {
+		edges = append(edges, user.EdgeClassReviewLikes)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeClassReviews:
+		ids := make([]ent.Value, 0, len(m.class_reviews))
+		for id := range m.class_reviews {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeClassReviewLikes:
+		ids := make([]ent.Value, 0, len(m.class_review_likes))
+		for id := range m.class_review_likes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.removedclass_reviews != nil {
+		edges = append(edges, user.EdgeClassReviews)
+	}
+	if m.removedclass_review_likes != nil {
+		edges = append(edges, user.EdgeClassReviewLikes)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeClassReviews:
+		ids := make([]ent.Value, 0, len(m.removedclass_reviews))
+		for id := range m.removedclass_reviews {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeClassReviewLikes:
+		ids := make([]ent.Value, 0, len(m.removedclass_review_likes))
+		for id := range m.removedclass_review_likes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.clearedclass_reviews {
+		edges = append(edges, user.EdgeClassReviews)
+	}
+	if m.clearedclass_review_likes {
+		edges = append(edges, user.EdgeClassReviewLikes)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case user.EdgeClassReviews:
+		return m.clearedclass_reviews
+	case user.EdgeClassReviewLikes:
+		return m.clearedclass_review_likes
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
+	switch name {
+	case user.EdgeClassReviews:
+		m.ResetClassReviews()
+		return nil
+	case user.EdgeClassReviewLikes:
+		m.ResetClassReviewLikes()
+		return nil
+	}
 	return fmt.Errorf("unknown User edge %s", name)
 }

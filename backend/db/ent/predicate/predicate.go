@@ -6,5 +6,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// ClassReview is the predicate function for classreview builders.
+type ClassReview func(*sql.Selector)
+
+// ClassReviewLike is the predicate function for classreviewlike builders.
+type ClassReviewLike func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

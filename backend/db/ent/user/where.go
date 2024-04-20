@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/yudai2929/kendai-navi/backend/db/ent/predicate"
 )
 
@@ -432,6 +433,52 @@ func UpdatedAtLT(v time.Time) predicate.User {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasClassReviews applies the HasEdge predicate on the "class_reviews" edge.
+func HasClassReviews() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ClassReviewsTable, ClassReviewsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasClassReviewsWith applies the HasEdge predicate on the "class_reviews" edge with a given conditions (other predicates).
+func HasClassReviewsWith(preds ...predicate.ClassReview) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newClassReviewsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasClassReviewLikes applies the HasEdge predicate on the "class_review_likes" edge.
+func HasClassReviewLikes() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ClassReviewLikesTable, ClassReviewLikesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasClassReviewLikesWith applies the HasEdge predicate on the "class_review_likes" edge with a given conditions (other predicates).
+func HasClassReviewLikesWith(preds ...predicate.ClassReviewLike) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newClassReviewLikesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.
