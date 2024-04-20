@@ -111,6 +111,28 @@ func (cs *customError) convert(err error, origin error, stack string) error {
 		return cs
 	}
 
+	// Ent
+	if ent.IsNotFound(err) {
+		cs.code = NotFound
+		return cs
+	}
+	if ent.IsConstraintError(err) {
+		cs.code = AlreadyExists
+		return cs
+	}
+	if ent.IsNotSingular(err) {
+		cs.code = Internal
+		return cs
+	}
+	if ent.IsNotLoaded(err) {
+		cs.code = Internal
+		return cs
+	}
+	if ent.IsValidationError(err) {
+		cs.code = InvalidArgument
+		return cs
+	}
+
 	cs.code = Internal
 	return cs
 }
