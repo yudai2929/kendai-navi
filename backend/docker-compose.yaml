@@ -14,6 +14,7 @@ services:
     environment:
       - DATABASE_URL=postgres://postgres:password@db:5432/app
   db:
+    container_name: kendai-navi-db
     image: postgres
     environment:
       - POSTGRES_USER=postgres
@@ -21,3 +22,8 @@ services:
       - POSTGRES_DB=app
     ports:
       - "5432:5432"
+    networks:
+      - kendai-navi-network
+networks:
+  kendai-navi-network:
+    external: true
