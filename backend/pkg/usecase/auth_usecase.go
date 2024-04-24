@@ -13,7 +13,7 @@ import (
 )
 
 type AuthUsecase interface {
-	RegisterUser(ctx context.Context, input *RegisterUserInput) error
+	RegisterUser(ctx context.Context, input *RegisterUserInput) (*RegisterUserOutput, error)
 }
 
 type AuthUsecaseImpl struct {
@@ -35,35 +35,41 @@ func NewAuthUsecase(userRepository repository.UserRepository, authClient auth.Au
 }
 
 type RegisterUserInput struct {
-	Email           string `validate:"required,email"`
-	Nickname        string `validate:"required"`
-	ProfileImageURL string `validate:"required,url"`
+	Email           string
+	Password        string
+	Nickname        string
+	ProfileImageURL string
 }
 
-func (u *AuthUsecaseImpl) RegisterUser(ctx context.Context, input *RegisterUserInput) error {
+type RegisterUserOutput struct {
+	User  *entity.User
+	Token string
+}
+
+func (u *AuthUsecaseImpl) RegisterUser(ctx context.Context, input *RegisterUserInput) (output *RegisterUserOutput, err error) {
 	if err := u.validate.Struct(input); err != nil {
-		return errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 
 	authUser, err := u.authClient.GetUserByEmail(ctx, input.Email)
 	if err != nil && !errors.EqualCode(err, errors.NotFound) {
-		return errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	if authUser != nil {
-		return errors.Newf(errors.AlreadyExists, "user already exists")
+		return nil, errors.Newf(errors.AlreadyExists, "user already exists")
 	}
 
 	user, err := u.userRepository.GetUserByEmail(ctx, input.Email)
 	if err != nil && !errors.EqualCode(err, errors.NotFound) {
-		return errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	if user != nil {
-		return errors.Newf(errors.AlreadyExists, "user already exists")
+		return nil, errors.Newf(errors.AlreadyExists, "user already exists")
 	}
 
-	newAuthUser, err := u.authClient.CreateUser(ctx, input.Email, "password")
+	newAuthUser, err := u.authClient.CreateUser(ctx, input.Email, input.Password)
 	if err != nil {
-		return errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 
 	newUser := entity.NewUser(
@@ -77,7 +83,7 @@ func (u *AuthUsecaseImpl) RegisterUser(ctx context.Context, input *RegisterUserI
 	)
 	_, createErr := u.userRepository.CreateUser(ctx, newUser)
 	if createErr != nil {
-		return errors.Wrap(createErr)
+		return nil, errors.Wrap(createErr)
 	}
 
 	// dbに保存が失敗した場合、authのユーザーも削除する
@@ -89,5 +95,8 @@ func (u *AuthUsecaseImpl) RegisterUser(ctx context.Context, input *RegisterUserI
 		}
 	}()
 
-	return nil
+	return &RegisterUserOutput{
+		User:  newUser,
+		Token: "token",
+	}, nil
 }
