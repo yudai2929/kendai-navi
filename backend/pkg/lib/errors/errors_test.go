@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 				code: InvalidArgument,
 			},
 			want: output{
-				err: &customError{
+				err: &CustomError{
 					code:   InvalidArgument,
 					origin: fmt.Errorf("InvalidArgument"),
 					stack:  "",
@@ -65,7 +65,7 @@ func TestNewf(t *testing.T) {
 				args:   []interface{}{"test"},
 			},
 			want: output{
-				err: &customError{
+				err: &CustomError{
 					code:   InvalidArgument,
 					origin: fmt.Errorf("test"),
 					stack:  "",
@@ -99,7 +99,7 @@ func TestWrap(t *testing.T) {
 				err: fmt.Errorf("test"),
 			},
 			want: output{
-				err: &customError{
+				err: &CustomError{
 					code:   Internal,
 					origin: fmt.Errorf("test"),
 					stack:  "",
@@ -112,7 +112,7 @@ func TestWrap(t *testing.T) {
 				err: Wrap(fmt.Errorf("test")),
 			},
 			want: output{
-				err: &customError{
+				err: &CustomError{
 					code:   Internal,
 					origin: fmt.Errorf("test"),
 					stack:  "",
@@ -150,7 +150,7 @@ func TestWrapf(t *testing.T) {
 				args:   []interface{}{"test"},
 			},
 			want: output{
-				err: &customError{
+				err: &CustomError{
 					code:   Internal,
 					origin: fmt.Errorf("test"),
 					stack:  "",
@@ -260,8 +260,9 @@ func TestCustomError_convert(t *testing.T) {
 		}
 		err := validate.Struct(input{})
 
-		ce := &customError{}
+		ce := &CustomError{}
 		converted := ce.convert(err, err, "")
-		assert.Equal(t, converted.(*customError).code, InvalidArgument)
+		assert.Equal(t, converted.(*CustomError).code, InvalidArgument)
 	})
+
 }

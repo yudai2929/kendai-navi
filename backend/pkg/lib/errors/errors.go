@@ -49,18 +49,22 @@ func (c ErrorCode) String() string {
 	}
 }
 
-type customError struct {
+type CustomError struct {
 	code   ErrorCode
 	origin error
 	stack  string
 }
 
-func (ce *customError) Error() string {
+func (ce *CustomError) Error() string {
 	return ce.code.String()
 }
 
+func (ce *CustomError) Code() ErrorCode {
+	return ce.code
+}
+
 func New(code ErrorCode) error {
-	return &customError{
+	return &CustomError{
 		code:   code,
 		origin: fmt.Errorf(code.String()),
 		stack:  string(debug.Stack()),
@@ -68,7 +72,7 @@ func New(code ErrorCode) error {
 }
 
 func Newf(code ErrorCode, format string, args ...interface{}) error {
-	return &customError{
+	return &CustomError{
 		code:   code,
 		origin: fmt.Errorf(format, args...),
 		stack:  string(debug.Stack()),
@@ -76,7 +80,7 @@ func Newf(code ErrorCode, format string, args ...interface{}) error {
 }
 
 func Wrap(err error) error {
-	ce := &customError{}
+	ce := &CustomError{}
 	if errors.As(err, &ce) {
 		return err
 	}
@@ -84,14 +88,14 @@ func Wrap(err error) error {
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
-	ce := &customError{}
+	ce := &CustomError{}
 	if As(err, &ce) {
 		return err
 	}
 	return ce.convert(err, fmt.Errorf(format, args...), ce.stack)
 }
 
-func (cs *customError) convert(err error, origin error, stack string) error {
+func (cs *CustomError) convert(err error, origin error, stack string) error {
 	cs.origin = origin
 	cs.stack = stack
 
@@ -138,6 +142,13 @@ func (cs *customError) convert(err error, origin error, stack string) error {
 		return cs
 	}
 
+	// gin binding error
+	var ginErr = fmt.Errorf("invalid request")
+	if errors.Is(err, ginErr) {
+		cs.code = InvalidArgument
+		return cs
+	}
+
 	// TODO: tx error
 
 	cs.code = Internal
@@ -145,7 +156,7 @@ func (cs *customError) convert(err error, origin error, stack string) error {
 }
 
 func EqualCode(err error, code ErrorCode) bool {
-	e, ok := err.(*customError)
+	e, ok := err.(*CustomError)
 	if !ok {
 		return false
 	}
